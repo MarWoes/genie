@@ -1,0 +1,1 @@
+"""Gene data domain."""
