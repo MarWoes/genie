@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from src.chat.router import router as chat_router
 from src.chat.service import AgentService
 from src.config import settings
+from src.frontend.router import router as frontend_router
 
 
 @asynccontextmanager
@@ -34,3 +35,4 @@ async def health_check() -> dict[str, str]:
 
 
 app.include_router(chat_router)
+app.include_router(frontend_router)

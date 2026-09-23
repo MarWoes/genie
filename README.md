@@ -25,16 +25,16 @@ uvicorn main:app --reload
 
 You can also run `main.py` directly from PyCharm after selecting the project `.venv` interpreter.
 
-The API is available at `http://127.0.0.1:8000`. Open `http://127.0.0.1:8000/docs` for the interactive documentation.
+The chat page is available at `http://127.0.0.1:8000/`. Open `http://127.0.0.1:8000/docs` for the interactive API documentation. The page is served directly from `src/frontend`, with no frontend build step.
 
 ## Chat endpoint
 
-`POST /chat` accepts the current message and optional client-managed history:
+`POST /chat` accepts a client-managed conversation and returns its updated messages:
 
 ```bash
 curl -X POST http://127.0.0.1:8000/chat \
   -H 'Content-Type: application/json' \
-  -d '{"message":"What does BRCA1 do?"}'
+  -d '{"messages":[{"role":"user","content":"What does BRCA1 do?"}]}'
 ```
 
-There is no database or checkpointer yet. The API is therefore stateless: send earlier turns in the `history` field when a conversation needs context.
+There is no database or checkpointer yet. The API is therefore stateless: send earlier turns in the `messages` field when a conversation needs context.

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from deepagents import create_deep_agent
+from langchain.agents import create_agent
 from langchain_core.messages import convert_to_openai_messages
 from langchain_openai import ChatOpenAI
 
@@ -27,17 +27,22 @@ class AgentService:
         if not self._settings.tensorx_api_key:
             return None
 
+        # Disable all default tools just in case something bad could happen
+        # See https://docs.langchain.com/oss/python/deepagents/overview#running-without-the-default-filesystem-tools
+        tensorx_model = self._settings.tensorx_model
+
         model = ChatOpenAI(
             api_key=self._settings.tensorx_api_key,
             base_url=self._settings.tensorx_base_url,
-            model=self._settings.tensorx_model,
+            model=tensorx_model,
             temperature=0,
             max_retries=2,
             timeout=120,
         )
 
-        return create_deep_agent(
+        return create_agent(
             model=model,
+            tools=[],
             system_prompt=(
                 """
                 You are Génie. An AI assistant whose sole purpose is to assist with simple gene expression lookups.

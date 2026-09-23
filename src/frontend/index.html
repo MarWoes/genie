@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Génie Chat</title>
+    <link rel="stylesheet" href="/static/lib/daisyui-5.css" />
+    <link rel="stylesheet" href="/static/css/chat.css" />
+    <script src="/static/js/chat.js" defer></script>
+    <script src="/static/lib/cdn.min.js" defer></script>
+  </head>
+  <body>
+    <main x-data="chat()">
+      <h1>Génie Chat</h1>
+      <div id="messages" x-ref="list" aria-live="polite">
+        <template x-for="(message, index) in messages" :key="index">
+          <div class="chat" :class="message.role === 'user' ? 'chat-end' : 'chat-start'">
+            <div class="chat-bubble" x-text="message.content"></div>
+          </div>
+        </template>
+        <div class="chat chat-start" x-show="loading">
+          <div class="chat-bubble"><span class="loading loading-dots loading-sm" role="status" aria-label="Génie is responding"></span></div>
+        </div>
+      </div>
+      <p class="error" x-show="error" x-text="error" role="alert"></p>
+      <form @submit.prevent="send()">
+        <input class="input input-bordered" aria-label="Message" placeholder="Type a message" x-model="input" :disabled="loading" />
+        <button class="btn btn-primary" :disabled="loading || !input.trim()">Send</button>
+      </form>
+    </main>
+  </body>
+</html>

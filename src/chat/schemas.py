@@ -7,8 +7,8 @@ from pydantic import BaseModel, Field
 class ChatMessage(BaseModel):
     """A user or assistant turn in a chat conversation."""
 
-    role: Literal["user", "assistant"]
-    content: str = Field(min_length=1)
+    role: Literal["user", "assistant", "tool"]
+    content: str
 
 
 class ChatConversation(BaseModel):
