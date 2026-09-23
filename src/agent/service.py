@@ -9,10 +9,6 @@ from src.agent.schemas import AgentInput, AgentOutput
 from src.config import Settings
 
 
-class AgentConfigurationError(RuntimeError):
-    """Raised when the model cannot be used with the current configuration."""
-
-
 class AgentService:
     """Create and invoke the TensorX-powered Deep Agent."""
 
