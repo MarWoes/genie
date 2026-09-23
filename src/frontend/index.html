@@ -68,28 +68,31 @@
     <main class="evaluation-main" x-data="evaluations()" x-show="view === 'evaluate'" x-cloak>
         <p class="eyebrow">AGENT EVALUATIONS</p>
         <h1>How reliably does Génie answer?</h1>
-        <p>Five cases, three fresh attempts each, using the configured chat model. Results stay in this page.</p>
+        <p><span x-text="cases.length"></span> cases, three fresh attempts each, using the configured chat model. Results stay in this page.</p>
         <form class="evaluation-controls" @submit.prevent="run()">
             <button class="btn btn-primary" :disabled="busy || !cases.length">
                 <span class="loading loading-spinner loading-sm" x-show="busy"></span>
                 <span x-text="busy ? 'Evaluating…' : 'Run evaluations'"></span>
             </button>
         </form>
-        <p class="evaluation-note">15 agent attempts, plus tool follow-up calls. May take a few minutes.</p>
+        <p class="evaluation-note"><span x-text="cases.length * 3"></span> agent attempts, plus tool follow-up calls. May take a few minutes.</p>
         <p role="status" x-show="busy">Running evaluations…</p>
         <p class="error" role="alert" x-show="error" x-text="error"></p>
 
         <details class="evaluation-card">
             <summary>Cases and expected answers</summary>
             <p>Final answers must be valid JSON. Lists ignore ordering; the canonical alias also accepts a single canonical_symbol field. Other values match exactly.</p>
+            <p>The help case checks required words in the explanation, as a simple POC check.</p>
             <template x-for="test in cases" :key="test.name">
                 <div class="evaluation-case">
                     <strong x-text="test.name"></strong>
                     <p x-text="test.prompt"></p>
+                    <p x-show="test.format" x-text="test.format"></p>
+                    <p x-show="test.match === 'contains'">Required words:</p>
                     <pre x-text="JSON.stringify(test.expected, null, 2)"></pre>
                 </div>
             </template>
-            <p class="evaluation-note">Expression values follow the current service's last-row-wins lookup: KRAS is 0.241, even when discovered through lung targets.</p>
+            <p class="evaluation-note">Expression cases follow the current service's last-row-wins lookup across all cancers. These are not cancer-specific measurements: for example, breast targets return BRCA2 = 0.112 rather than its breast-row value of 0.032.</p>
         </details>
 
         <p class="evaluation-note">pass@k: at least one of k attempts succeeds. pass^k: all k succeed. Scores are averaged over cases; request errors count as failures. Three attempts give only a rough estimate.</p>
@@ -107,7 +110,7 @@
                 <template x-for="test in result.cases" :key="test.name">
                     <details class="evaluation-case">
                         <summary><span x-text="test.name"></span> — <span x-text="`${test.attempts.filter(a => a.passed).length}/3 passed`"></span></summary>
-                        <p>Expected:</p><pre x-text="JSON.stringify(test.expected, null, 2)"></pre>
+                        <p x-text="test.match === 'contains' ? 'Required words:' : 'Expected:'"></p><pre x-text="JSON.stringify(test.expected, null, 2)"></pre>
                         <template x-for="(attempt, index) in test.attempts" :key="index">
                             <div>
                                 <strong x-text="`Run ${index + 1}: ${attempt.passed ? 'Pass' : 'Fail'}`"></strong>

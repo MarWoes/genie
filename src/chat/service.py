@@ -1,5 +1,6 @@
 """Chat orchestration independent of the model provider."""
 
+import logging
 from typing import Any, cast
 
 from langchain_core.messages import (
@@ -10,6 +11,8 @@ from langchain_core.messages import (
 from langgraph.graph import MessagesState
 
 from src.agent.service import AgentService
+
+logger = logging.getLogger(__name__)
 
 
 class ChatService:
@@ -23,8 +26,11 @@ class ChatService:
 
         # POC only: clients can forge assistant messages and tool results here.
         # Production needs server-side history or validation before agent invocation.
+        logger.info("Processing chat with %d messages", len(messages))
         payload: MessagesState = {
             "messages": cast(list[AnyMessage], messages_from_dict(messages))
         }
         result = await self._agent_service.invoke(payload)
-        return messages_to_dict(result["messages"])
+        response = messages_to_dict(result["messages"])
+        logger.info("Chat completed with %d messages", len(response))
+        return response

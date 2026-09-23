@@ -1,5 +1,6 @@
 """TensorX-backed agent integration."""
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,7 @@ from src.config import Settings
 from src.genes.service import GeneExpressionService
 
 SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "data" / "system_prompt.txt"
+logger = logging.getLogger(__name__)
 
 
 class AgentService:
@@ -25,6 +27,7 @@ class AgentService:
         self._settings = settings
         self._gene_service = gene_service
         self._agent = self._build_agent()
+        logger.info("Initialized agent with model %s", self._settings.tensorx_model)
 
     def _build_agent(self) -> Any | None:
         """Build the agent without making a network request."""
@@ -75,4 +78,15 @@ class AgentService:
 
     async def invoke(self, payload: MessagesState) -> MessagesState:
         """Invoke the configured agent and return its message state."""
-        return await self._agent.ainvoke(payload)
+        logger.debug("Invoking agent with %d messages", len(payload["messages"]))
+        try:
+            result = await self._agent.ainvoke(payload)
+        except Exception as exc:
+            logger.error(
+                "Agent invocation failed (model=%s, error_type=%s)",
+                self._settings.tensorx_model,
+                type(exc).__name__,
+            )
+            raise
+        logger.debug("Agent invocation completed")
+        return result

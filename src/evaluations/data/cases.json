@@ -1,13 +1,33 @@
 [
   {
+    "name": "How can you help me?",
+    "prompt": "How can you help me?",
+    "format": "Return your explanation as a JSON string.",
+    "match": "contains",
+    "expected": ["gene", "expression"]
+  },
+  {
     "name": "Covered cancers",
     "prompt": "List every cancer indication covered by the dataset as a JSON array of strings.",
     "expected": ["breast", "lung", "prostate", "gastric", "glioblastoma", "colorectal", "melanoma", "ovarian", "pancreatic", "renal"]
   },
   {
     "name": "Lung targets",
-    "prompt": "List the canonical gene targets for lung cancer as a JSON array of strings.",
+    "prompt": "What are the main genes involved in lung cancer?",
+    "format": "Return the gene symbols from the dataset as a JSON array of strings.",
     "expected": ["ALK", "RET", "ROS1", "STK11", "KRAS"]
+  },
+  {
+    "name": "Breast cancer expressions",
+    "prompt": "What is the median value expression of genes involved in breast cancer?",
+    "format": "Return a JSON object mapping gene symbols to the values returned by the expression tool.",
+    "expected": {"BRCA2": 0.112, "BRCA1": 0.158, "TP53": 0.373, "GATA3": 0.602, "CDH1": 0.834, "ESR1": 0.716, "MAP3K1": 0.701, "ERBB2": 0.67, "PIK3CA": 0.762, "AKT1": 0.278}
+  },
+  {
+    "name": "Esophageal cancer is not covered",
+    "prompt": "What is the median value expression of genes involved in esophageal cancer?",
+    "format": "Return a JSON object with covered (whether this cancer is in the dataset) and expressions (a gene-to-value object, empty when no data is available).",
+    "expected": {"covered": false, "expressions": {}}
   },
   {
     "name": "Canonical alias",

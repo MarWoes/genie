@@ -41,18 +41,23 @@ There is no database or checkpointer yet. The API is therefore stateless: send e
 
 ## Evaluations
 
-Open **Evaluate** and click **Run evaluations**. It runs five cases three times
+Open **Evaluate** and click **Run evaluations**. It runs eight cases three times
 with fresh history, using the configured chat agent, tools, and temperature (0).
 This makes paid model API calls;
 no additional evaluation server, account, or dependency is needed. Results live
 only in the browser until reload.
 
 Cases and fixed expected answers are in `src/evaluations/data/cases.json`.
+The suite includes the four requested questions: help, lung targets, breast
+expressions, and unsupported esophageal cancer. Each gets a JSON formatting
+instruction. The help case uses a simple keyword check ("gene" and "expression");
+the esophageal case expects `{"covered": false, "expressions": {}}`.
 Scoring compares the final JSON answer with the expected value, ignoring array
 order. The canonical alias accepts either a JSON string or a one-field object
 with a `canonical_symbol` key. Invalid JSON and request errors fail; there is no LLM judge. The lung
 expression case follows the service's last-row-wins semantics for repeated genes
 (KRAS = 0.241), rather than assuming cancer-specific expression values.
+The breast case has the same caveat: BRCA2 = 0.112, not its breast-row value 0.032.
 
 For each case, with n=3 attempts and c successes, the report estimates:
 

@@ -1,10 +1,12 @@
 """Lookups over the gene expression dataset."""
 
+import logging
 from pathlib import Path
 
 import pandas as pd
 
 DATASET_PATH = Path(__file__).resolve().parent / "data" / "gene_expression.csv"
+logger = logging.getLogger(__name__)
 
 
 class GeneExpressionService:
@@ -14,6 +16,11 @@ class GeneExpressionService:
         self._data = pd.read_csv(DATASET_PATH)
         self._canonical_symbols: dict[str, str] = dict(
             zip(self._data["gene"], self._data["canonical_gene"])
+        )
+        logger.info(
+            "Loaded gene expression data (%d rows, %d cancer types)",
+            len(self._data),
+            self._data["cancer_indication"].nunique(),
         )
 
     def get_targets(self, cancer_name: str) -> list[str]:

@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 from math import comb
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,7 @@ from src.config import Settings
 
 RUNS = 3
 CASES_PATH = Path(__file__).resolve().parent / "data" / "cases.json"
+logger = logging.getLogger(__name__)
 
 
 def calculate_metrics(correct_counts: list[int]) -> list[dict[str, float | int]]:
@@ -41,9 +43,14 @@ def calculate_metrics(correct_counts: list[int]) -> list[dict[str, float | int]]
 
 
 def matches_expected(actual: Any, case: dict[str, Any]) -> bool:
-    """Compare JSON answers, allowing unordered lists and the configured wrapper."""
+    """Check required words for explanations; otherwise compare JSON values."""
 
     expected = case["expected"]
+    if case.get("match") == "contains":
+        if not isinstance(actual, str):
+            return False
+        return all(word.casefold() in actual.casefold() for word in expected)
+
     answer_key = case.get("answer_key")
     if answer_key and isinstance(actual, dict) and list(actual) == [answer_key]:
         actual = actual[answer_key]
@@ -66,6 +73,12 @@ class EvaluationService:
         self.cases = json.loads(CASES_PATH.read_text(encoding="utf-8"))
 
     async def run(self) -> dict[str, Any]:
+        logger.info(
+            "Starting evaluation (model=%s, cases=%d, runs_per_case=%d)",
+            self.settings.tensorx_model,
+            len(self.cases),
+            RUNS,
+        )
         results = []
         correct_counts = []
 
@@ -73,17 +86,27 @@ class EvaluationService:
             pending_attempts = [self._run_attempt(case) for _ in range(RUNS)]
             attempts = await asyncio.gather(*pending_attempts)
             results.append({**case, "attempts": attempts})
-            correct_counts.append(sum(attempt["passed"] for attempt in attempts))
+            passed = sum(attempt["passed"] for attempt in attempts)
+            correct_counts.append(passed)
+            logger.info("Evaluation case %r: %d/%d passed", case["name"], passed, RUNS)
 
+        metrics = calculate_metrics(correct_counts)
+        logger.info(
+            "Evaluation complete (model=%s, pass@1=%.3f, pass^3=%.3f)",
+            self.settings.tensorx_model,
+            metrics[0]["pass_at_k"],
+            metrics[-1]["pass_hat_k"],
+        )
         return {
             "model": self.settings.tensorx_model,
             "runs": RUNS,
             "cases": results,
-            "metrics": calculate_metrics(correct_counts),
+            "metrics": metrics,
         }
 
     async def _run_attempt(self, case: dict[str, Any]) -> dict[str, Any]:
-        prompt = case["prompt"] + " Return only valid JSON, without markdown or explanation."
+        prompt = case["prompt"] + " " + case.get("format", "")
+        prompt += " Return only valid JSON, without markdown or extra explanation."
         try:
             # Each attempt starts with fresh history; no checkpointer is configured.
             result = await asyncio.wait_for(
@@ -92,6 +115,11 @@ class EvaluationService:
             )
         except (APIError, TimeoutError, GraphRecursionError) as exc:
             # Failed requests remain failed attempts, visible in the report.
+            logger.warning(
+                "Evaluation attempt failed (case=%r, error_type=%s)",
+                case["name"],
+                type(exc).__name__,
+            )
             return {"passed": False, "answer": "", "error": str(exc)[:300]}
 
         answer = ""
@@ -103,10 +131,17 @@ class EvaluationService:
         try:
             actual = json.loads(answer)
         except json.JSONDecodeError:
+            logger.info("Evaluation answer was not JSON (case=%r)", case["name"])
             return {"passed": False, "answer": answer, "error": "Expected valid JSON."}
 
+        passed = matches_expected(actual, case)
+        if not passed:
+            logger.info(
+                "Evaluation answer did not match expected result (case=%r)",
+                case["name"],
+            )
         return {
-            "passed": matches_expected(actual, case),
+            "passed": passed,
             "answer": answer,
             "error": None,
         }
