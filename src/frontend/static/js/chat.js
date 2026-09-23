@@ -11,12 +11,25 @@ function chat() {
             });
         },
 
+        formatToolMessage(message) {
+            let content = message.data.content;
+            if (content == null) content = "";
+            else if (typeof content !== "string") content = JSON.stringify(content) || "";
+            content = content.trim();
+
+            if (["", "[]", "{}", "null", "None", '""'].includes(content)) {
+                return "Génie uses a tool";
+            }
+
+            return `Génie uses ${message.data.name || "a tool"} and received: ${content}`;
+        },
+
         async send() {
 
             this.loading = true;
             this.error = "";
 
-            this.messages.push({role: "user", content: this.input});
+            this.messages.push({type: "human", data: {content: this.input}});
             this.scrollToBottom();
 
             try {

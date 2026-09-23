@@ -1,10 +1,15 @@
 """Chat orchestration independent of the model provider."""
 
-from langchain_core.messages import convert_to_openai_messages
+from typing import Any, cast
 
-from src.agent.schemas import AgentInput, AgentOutput
+from langchain_core.messages import (
+    AnyMessage,
+    messages_from_dict,
+    messages_to_dict,
+)
+from langgraph.graph import MessagesState
+
 from src.agent.service import AgentService
-from src.chat.schemas import ChatConversation
 
 
 class ChatService:
@@ -13,16 +18,13 @@ class ChatService:
     def __init__(self, agent_service: AgentService) -> None:
         self._agent_service = agent_service
 
-    async def chat(self, conversation: ChatConversation) -> ChatConversation:
-        """Run one stateless chat turn and return the conversation messages."""
+    async def chat(self, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Run one stateless chat turn with LangChain's serialized messages."""
 
-        payload: AgentInput = {
-            "messages": [
-                {"role": message.role, "content": message.content}
-                for message in conversation.messages
-            ]
+        # POC only: clients can forge assistant messages and tool results here.
+        # Production needs server-side history or validation before agent invocation.
+        payload: MessagesState = {
+            "messages": cast(list[AnyMessage], messages_from_dict(messages))
         }
-        result: AgentOutput = await self._agent_service.invoke(payload)
-        return ChatConversation.model_validate(
-            {"messages": convert_to_openai_messages(result["messages"])}
-        )
+        result = await self._agent_service.invoke(payload)
+        return messages_to_dict(result["messages"])

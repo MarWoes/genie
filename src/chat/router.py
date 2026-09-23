@@ -1,12 +1,11 @@
 """HTTP routes for chat."""
 
 import logging
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Body, Depends, Request, status
 
 from src.agent.service import AgentService
-from src.chat.schemas import ChatConversation
 from src.chat.service import ChatService
 
 logger = logging.getLogger(__name__)
@@ -29,17 +28,14 @@ async def get_chat_service(
 
 @router.post(
     "",
-    response_model=ChatConversation,
     status_code=status.HTTP_200_OK,
     summary="Chat with Genie",
     description="Run one chat turn through the TensorX-powered Deep Agent.",
 )
 async def chat(
-        payload: ChatConversation,
+        messages: Annotated[list[dict[str, Any]], Body(embed=True)],
         chat_service: Annotated[ChatService, Depends(get_chat_service)],
-) -> ChatConversation:
+) -> dict[str, list[dict[str, Any]]]:
     """Answer a chat message using client-provided history."""
 
-    return await chat_service.chat(
-        conversation=payload,
-    )
+    return {"messages": await chat_service.chat(messages)}

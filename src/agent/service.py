@@ -4,10 +4,12 @@ from pathlib import Path
 from typing import Any
 
 from langchain.agents import create_agent
+from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
+from langgraph.graph import MessagesState
 
-from src.agent.schemas import AgentInput, AgentOutput
 from src.config import Settings
+from src.genes.service import GeneExpressionService
 
 SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "data" / "system_prompt.txt"
 
@@ -15,8 +17,13 @@ SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "data" / "system_prompt.t
 class AgentService:
     """Create and invoke the TensorX-powered Deep Agent."""
 
-    def __init__(self, settings: Settings) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        gene_service: GeneExpressionService,
+    ) -> None:
         self._settings = settings
+        self._gene_service = gene_service
         self._agent = self._build_agent()
 
     def _build_agent(self) -> Any | None:
@@ -31,12 +38,41 @@ class AgentService:
             timeout=120,
         )
 
+        @tool
+        def get_targets(cancer_name: str) -> list[str]:
+            """Get canonical gene targets for a cancer indication."""
+
+            return self._gene_service.get_targets(cancer_name)
+
+        @tool
+        def get_cancer_types() -> list[str]:
+            """List the cancer indications covered by the take-home dataset."""
+
+            return self._gene_service.get_cancer_types()
+
+        @tool
+        def get_canonical_symbol(gene_symbol: str) -> str | None:
+            """Get the canonical symbol for a gene in the take-home dataset."""
+
+            return self._gene_service.get_canonical_symbol(gene_symbol)
+
+        @tool
+        def get_expressions(genes: list[str]) -> dict[str, float]:
+            """Get median expression values for gene symbols."""
+
+            return self._gene_service.get_expressions(genes)
+
         return create_agent(
             model=model,
-            tools=[],
+            tools=[
+                get_targets,
+                get_cancer_types,
+                get_canonical_symbol,
+                get_expressions,
+            ],
             system_prompt=SYSTEM_PROMPT_PATH.read_text(encoding="utf-8"),
         )
 
-    async def invoke(self, payload: AgentInput) -> AgentOutput:
+    async def invoke(self, payload: MessagesState) -> MessagesState:
         """Invoke the configured agent and return its message state."""
         return await self._agent.ainvoke(payload)

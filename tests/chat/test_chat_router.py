@@ -3,7 +3,12 @@ from unittest.mock import AsyncMock
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import (
+    AIMessage,
+    HumanMessage,
+    message_to_dict,
+    messages_to_dict,
+)
 
 from src.agent.service import AgentService
 from src.chat.router import get_agent_service, router
@@ -29,16 +34,15 @@ async def test_chat_endpoint_uses_injected_agent_service() -> None:
     ) as client:
         response = await client.post(
             "/chat",
-            json={"messages": [{"role": "user", "content": "Hello"}]},
+            json={"messages": [message_to_dict(HumanMessage(content="Hello"))]},
         )
 
     assert response.status_code == 200
     assert response.json() == {
-        "messages": [
-            {"role": "user", "content": "Hello"},
-            {"role": "assistant", "content": "Hi there!"},
-        ]
+        "messages": messages_to_dict(
+            [HumanMessage(content="Hello"), AIMessage(content="Hi there!")]
+        )
     }
     agent_service.invoke.assert_awaited_once_with(
-        {"messages": [{"role": "user", "content": "Hello"}]}
+        {"messages": [HumanMessage(content="Hello")]}
     )

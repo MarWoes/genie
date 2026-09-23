@@ -9,13 +9,14 @@ from src.agent.service import AgentService
 from src.chat.router import router as chat_router
 from src.config import settings
 from src.frontend.router import router as frontend_router
+from src.genes.service import GeneExpressionService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Create application services when the FastAPI process starts."""
 
-    app.state.agent_service = AgentService(settings)
+    app.state.agent_service = AgentService(settings, GeneExpressionService())
     yield
 
 
