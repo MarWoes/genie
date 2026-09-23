@@ -5,8 +5,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from src.agent.service import AgentService
 from src.chat.router import router as chat_router
-from src.chat.service import AgentService
 from src.config import settings
 from src.frontend.router import router as frontend_router
 

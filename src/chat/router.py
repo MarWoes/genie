@@ -6,8 +6,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from openai import OpenAIError
 
+from src.agent.service import AgentConfigurationError, AgentService
 from src.chat.schemas import ChatConversation
-from src.chat.service import AgentConfigurationError, AgentService
+from src.chat.service import ChatService
 
 
 logger = logging.getLogger(__name__)
@@ -20,21 +21,29 @@ async def get_agent_service(request: Request) -> AgentService:
     return request.app.state.agent_service
 
 
+async def get_chat_service(
+    agent_service: Annotated[AgentService, Depends(get_agent_service)],
+) -> ChatService:
+    """Create chat orchestration around the process-level agent service."""
+
+    return ChatService(agent_service)
+
+
 @router.post(
     "",
     response_model=ChatConversation,
     status_code=status.HTTP_200_OK,
     summary="Chat with Genie",
-    description="Run one chat turn through the TensorX-powered Deep Agent."
+    description="Run one chat turn through the TensorX-powered Deep Agent.",
 )
 async def chat(
     payload: ChatConversation,
-    agent_service: Annotated[AgentService, Depends(get_agent_service)],
+    chat_service: Annotated[ChatService, Depends(get_chat_service)],
 ) -> ChatConversation:
     """Answer a chat message using client-provided history."""
 
     try:
-        return await agent_service.chat(
+        return await chat_service.chat(
             conversation=payload,
         )
     except AgentConfigurationError as exc:
