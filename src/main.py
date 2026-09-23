@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -12,6 +13,11 @@ from src.evaluations.router import router as evaluations_router
 from src.evaluations.service import EvaluationService
 from src.frontend.router import router as frontend_router
 from src.genes.service import GeneExpressionService
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
 
 @asynccontextmanager

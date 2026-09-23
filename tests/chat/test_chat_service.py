@@ -36,7 +36,7 @@ async def test_chat_passes_conversation_to_agent_and_returns_messages() -> None:
 @pytest.mark.asyncio
 async def test_chat_preserves_tool_calls_across_requests() -> None:
     tool_call = {
-        "name": "get_targets",
+        "name": "get_expressions_for_cancer",
         "args": {"cancer_name": "lung"},
         "id": "call_1",
         "type": "tool_call",
@@ -46,7 +46,11 @@ async def test_chat_preserves_tool_calls_across_requests() -> None:
         "messages": [
             HumanMessage(content="Find targets"),
             AIMessage(content="", tool_calls=[tool_call]),
-            ToolMessage(content="['EGFR']", tool_call_id="call_1", name="get_targets"),
+            ToolMessage(
+                content="{'EGFR': 0.1}",
+                tool_call_id="call_1",
+                name="get_expressions_for_cancer",
+            ),
             AIMessage(content="EGFR is a target."),
         ]
     }

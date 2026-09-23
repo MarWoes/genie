@@ -1,71 +1,94 @@
-# Génie - Your friendly gene agent
+# Génie
 
-## What is this?
-
-
-The goal is to create a small project for an AI agent that will assist users when searching for gene information.
+A small proof of concept for natural language gene expression lookups over the
+provided CSV. It runs locally with a hosted, OpenAI-compatible TensorX
+model; it does not need a GPU or a separate tracing/evaluation server.
 
 ## Run locally
 
-Create and activate the project virtual environment, then install the dependencies:
+Use Python 3.12 on macOS or Windows 11. A valid TensorX API key and access to the
+configured TensorX model are needed for chat and evaluations.
+
+macOS:
 
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Copy `.env.example` to `.env` and add your TensorX API key. TensorX exposes an OpenAI-compatible API, so the app uses LangChain's `ChatOpenAI` adapter with TensorX's base URL.
-
-Start the API from the project root:
-
-```bash
+python -m pip install -r requirements-dev.txt
+cp .env.example .env
+# Edit .env and set TENSORX_API_KEY to your key.
 uvicorn main:app --reload
 ```
 
-You can also run `main.py` directly from PyCharm after selecting the project `.venv` interpreter.
+Windows PowerShell:
 
-The chat page is available at `http://127.0.0.1:8000/`. Open `http://127.0.0.1:8000/docs` for the interactive API documentation. The page is served directly from `src/frontend`, with no frontend build step.
-
-## Chat endpoint
-
-`POST /chat` accepts a client-managed conversation and returns its updated messages:
-
-```bash
-curl -X POST http://127.0.0.1:8000/chat \
-  -H 'Content-Type: application/json' \
-  -d '{"messages":[{"type":"human","data":{"content":"What are the lung cancer targets?"}}]}'
+```powershell
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-dev.txt
+Copy-Item .env.example .env
+# Edit .env and set TENSORX_API_KEY to your key.
+uvicorn main:app --reload
 ```
 
-There is no database or checkpointer yet. The API is therefore stateless: send earlier turns in the `messages` field when a conversation needs context.
+Open <http://127.0.0.1:8000/> for Chat and Evaluate, or
+<http://127.0.0.1:8000/docs> for the API docs. The static frontend is served
+directly from `src/frontend`; there is no frontend build. The direct Python
+dependencies are pinned in `requirements.txt` and the test tools in
+`requirements-dev.txt`.
 
-## Evaluations
+Run the tests with:
 
-Open **Evaluate** and click **Run evaluations**. It runs eight cases three times
-with fresh history, using the configured chat agent, tools, and temperature (0).
-This makes paid model API calls;
-no additional evaluation server, account, or dependency is needed. Results live
-only in the browser until reload.
+```bash
+python -m pytest
+```
 
-Cases and fixed expected answers are in `src/evaluations/data/cases.json`.
-The suite includes the four requested questions: help, lung targets, breast
-expressions, and unsupported esophageal cancer. Each gets a JSON formatting
-instruction. The help case uses a simple keyword check ("gene" and "expression");
-the esophageal case expects `{"covered": false, "expressions": {}}`.
-Scoring compares the final JSON answer with the expected value, ignoring array
-order. The canonical alias accepts either a JSON string or a one-field object
-with a `canonical_symbol` key. Invalid JSON and request errors fail; there is no LLM judge. The lung
-expression case follows the service's last-row-wins semantics for repeated genes
-(KRAS = 0.241), rather than assuming cancer-specific expression values.
-The breast case has the same caveat: BRCA2 = 0.112, not its breast-row value 0.032.
+## Architecture and behavior
 
-For each case, with n=3 attempts and c successes, the report estimates:
+The browser sends LangChain's serialized message history to FastAPI. `ChatService`
+converts it to LangChain messages and calls `AgentService`, which uses
+`langchain.agents.create_agent` with the configured `ChatOpenAI` adapter. The
+agent can call five local tools backed by `GeneExpressionService`; that service
+loads the bundled CSV once. The same agent powers the
+evaluation page. Evaluation cases and expected answers live in
+`src/evaluations/data/cases.json`.
 
-- pass@k = `1 - C(n-c, k) / C(n, k)` (at least one success).
-- pass^k = `C(c, k) / C(n, k)` (all succeed).
+The app is stateless: conversation history stays in the browser and is sent on
+each request. This keeps the POC small and needs no database, but the server
+currently trusts client-provided history. Do not expose this setup as a
+production service without validating or storing conversation history safely.
 
-Scores are averaged across cases for k=1,2,3.
-These follow [HumanEval](https://github.com/openai/human-eval/blob/master/human_eval/evaluation.py)
-and [τ-bench](https://arxiv.org/abs/2406.12045). Three attempts are a small POC
-sample; with temperature 0 they may give identical answers. The runner limits
-itself to three concurrent attempts per case and 120 seconds per attempt.
+The gene service maps aliases to canonical symbols. Its tools list covered
+cancers and genes, look up aliases, return all gene expressions for one cancer,
+or return one gene's expressions across cancers. For example, HER2 resolves to
+ERBB2, with 0.42 in breast and 0.67 in gastric cancer. KRAS is 0.359 in lung
+and 0.241 in pancreatic cancer. Keeping cancer in each result avoids the
+provided gene-only example's “last matching row” ambiguity. Unknown cancers
+or genes return no values. Cross-cancer differences are descriptive only:
+the CSV does not specify units or normalization for biological comparisons.
+
+The eight evaluation cases use fixed expected JSON values; help is checked for
+the words “gene” and “expression”. Lists ignore order. There is no LLM judge or
+tool-call trace validation, so this is a small smoke check rather than a full
+measure of conversational quality. Each run makes 24 agent requests (eight
+cases × three attempts), plus any tool-follow-up requests, and results are not
+saved. It calculates pass@k (at least one of k attempts succeeds) and pass^k
+(all k attempts succeed), averaged across cases. With temperature 0, the three
+attempts may return identical answers.
+
+The manual demo questions are: “How can you help me?”, “What are the main genes
+involved in lung cancer?”, “What is the median value expression of genes
+involved in breast cancer?”, and “What is the median value expression of genes
+involved in esophageal cancer?”, and “What are the expression values for KRAS
+across cancers?” The esophageal question should be answered as “not covered by
+this dataset”; it does not mean that esophageal cancer has no relevant genes.
+
+## AI-assisted coding: trade-offs
+
+AI assistance sped up scaffolding, repetitive wiring, and the first evaluation
+UI. It also made confident assumptions about tool message formats and gene
+aliases that needed checking against the installed library behavior and CSV.
+Generated code can add unnecessary dependencies or tests that pass its own
+assumptions without checking the task's real semantics. I kept the tools and
+evaluation local, reviewed the lookups against the CSV, and made the limitations
+visible rather than treating model-generated answers as ground truth.

@@ -21,7 +21,7 @@
     "name": "Breast cancer expressions",
     "prompt": "What is the median value expression of genes involved in breast cancer?",
     "format": "Return a JSON object mapping gene symbols to the values returned by the expression tool.",
-    "expected": {"BRCA2": 0.112, "BRCA1": 0.158, "TP53": 0.373, "GATA3": 0.602, "CDH1": 0.834, "ESR1": 0.716, "MAP3K1": 0.701, "ERBB2": 0.67, "PIK3CA": 0.762, "AKT1": 0.278}
+    "expected": {"BRCA2": 0.032, "BRCA1": 0.094, "TP53": 0.233, "GATA3": 0.602, "CDH1": 0.561, "ESR1": 0.716, "MAP3K1": 0.701, "ERBB2": 0.42, "PIK3CA": 0.449, "AKT1": 0.278}
   },
   {
     "name": "Esophageal cancer is not covered",
@@ -36,9 +36,9 @@
     "expected": "ERBB2"
   },
   {
-    "name": "Lung expressions (two tools)",
-    "prompt": "Find the targets for lung cancer, then get their expression values using get_expressions. Return a JSON object mapping gene symbols to those values.",
-    "expected": {"ALK": 0.215, "RET": 0.763, "ROS1": 0.102, "STK11": 0.38, "KRAS": 0.241}
+    "name": "KRAS across cancers",
+    "prompt": "What are the median expression values for KRAS across the covered cancers? Return a JSON object mapping cancer indications to values.",
+    "expected": {"lung": 0.359, "gastric": 0.355, "colorectal": 0.885, "ovarian": 0.003, "pancreatic": 0.241}
   },
   {
     "name": "Unknown gene",

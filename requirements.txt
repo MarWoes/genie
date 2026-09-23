@@ -1,6 +1,8 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-pydantic-settings>=2.4
-deepagents>=0.7
-langchain-openai>=0.3
-pandas>=3.0
+fastapi==0.141.1
+uvicorn[standard]==0.53.0
+pydantic-settings==2.15.0
+langchain==1.4.2
+langchain-openai==1.6.3
+langgraph==1.2.12
+openai==3.17.0
+pandas==3.0.6

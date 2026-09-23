@@ -1,4 +1,4 @@
-"""TensorX-backed agent integration."""
+"""LangChain tool-calling agent backed by TensorX."""
 
 import logging
 from pathlib import Path
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class AgentService:
-    """Create and invoke the TensorX-powered Deep Agent."""
+    """Create and invoke the TensorX-powered agent."""
 
     def __init__(
         self,
@@ -42,36 +42,43 @@ class AgentService:
         )
 
         @tool
-        def get_targets(cancer_name: str) -> list[str]:
-            """Get canonical gene targets for a cancer indication."""
-
-            return self._gene_service.get_targets(cancer_name)
-
-        @tool
         def get_cancer_types() -> list[str]:
-            """List the cancer indications covered by the take-home dataset."""
+            """List the cancer indications covered by the dataset."""
 
             return self._gene_service.get_cancer_types()
 
         @tool
+        def get_genes() -> list[str]:
+            """List all canonical genes with expression data in the dataset."""
+
+            return self._gene_service.get_genes()
+
+        @tool
         def get_canonical_symbol(gene_symbol: str) -> str | None:
-            """Get the canonical symbol for a gene in the take-home dataset."""
+            """Get the canonical symbol for a gene in the dataset."""
 
             return self._gene_service.get_canonical_symbol(gene_symbol)
 
         @tool
-        def get_expressions(genes: list[str]) -> dict[str, float]:
-            """Get median expression values for gene symbols."""
+        def get_expressions_for_cancer(cancer_name: str) -> dict[str, float]:
+            """Get each gene's median expression value for a cancer indication."""
 
-            return self._gene_service.get_expressions(genes)
+            return self._gene_service.get_expressions_for_cancer(cancer_name)
+
+        @tool
+        def get_expressions_for_gene(gene_symbol: str) -> dict[str, float]:
+            """Get a gene's median expression values by cancer; aliases are accepted."""
+
+            return self._gene_service.get_expressions_for_gene(gene_symbol)
 
         return create_agent(
             model=model,
             tools=[
-                get_targets,
                 get_cancer_types,
+                get_genes,
                 get_canonical_symbol,
-                get_expressions,
+                get_expressions_for_cancer,
+                get_expressions_for_gene,
             ],
             system_prompt=SYSTEM_PROMPT_PATH.read_text(encoding="utf-8"),
         )
