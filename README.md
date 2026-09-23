@@ -34,7 +34,33 @@ The chat page is available at `http://127.0.0.1:8000/`. Open `http://127.0.0.1:8
 ```bash
 curl -X POST http://127.0.0.1:8000/chat \
   -H 'Content-Type: application/json' \
-  -d '{"messages":[{"role":"user","content":"What does BRCA1 do?"}]}'
+  -d '{"messages":[{"type":"human","data":{"content":"What are the lung cancer targets?"}}]}'
 ```
 
 There is no database or checkpointer yet. The API is therefore stateless: send earlier turns in the `messages` field when a conversation needs context.
+
+## Evaluations
+
+Open **Evaluate** and click **Run evaluations**. It runs five cases three times
+with fresh history, using the configured chat agent, tools, and temperature (0).
+This makes paid model API calls;
+no additional evaluation server, account, or dependency is needed. Results live
+only in the browser until reload.
+
+Cases and fixed expected answers are in `src/evaluations/data/cases.json`.
+Scoring compares the final JSON answer with the expected value, ignoring array
+order. The canonical alias accepts either a JSON string or a one-field object
+with a `canonical_symbol` key. Invalid JSON and request errors fail; there is no LLM judge. The lung
+expression case follows the service's last-row-wins semantics for repeated genes
+(KRAS = 0.241), rather than assuming cancer-specific expression values.
+
+For each case, with n=3 attempts and c successes, the report estimates:
+
+- pass@k = `1 - C(n-c, k) / C(n, k)` (at least one success).
+- pass^k = `C(c, k) / C(n, k)` (all succeed).
+
+Scores are averaged across cases for k=1,2,3.
+These follow [HumanEval](https://github.com/openai/human-eval/blob/master/human_eval/evaluation.py)
+and [τ-bench](https://arxiv.org/abs/2406.12045). Three attempts are a small POC
+sample; with temperature 0 they may give identical answers. The runner limits
+itself to three concurrent attempts per case and 120 seconds per attempt.

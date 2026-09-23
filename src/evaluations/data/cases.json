@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Covered cancers",
+    "prompt": "List every cancer indication covered by the dataset as a JSON array of strings.",
+    "expected": ["breast", "lung", "prostate", "gastric", "glioblastoma", "colorectal", "melanoma", "ovarian", "pancreatic", "renal"]
+  },
+  {
+    "name": "Lung targets",
+    "prompt": "List the canonical gene targets for lung cancer as a JSON array of strings.",
+    "expected": ["ALK", "RET", "ROS1", "STK11", "KRAS"]
+  },
+  {
+    "name": "Canonical alias",
+    "prompt": "What is the canonical symbol for HER2 in the dataset? Return a JSON string.",
+    "answer_key": "canonical_symbol",
+    "expected": "ERBB2"
+  },
+  {
+    "name": "Lung expressions (two tools)",
+    "prompt": "Find the targets for lung cancer, then get their expression values using get_expressions. Return a JSON object mapping gene symbols to those values.",
+    "expected": {"ALK": 0.215, "RET": 0.763, "ROS1": 0.102, "STK11": 0.38, "KRAS": 0.241}
+  },
+  {
+    "name": "Unknown gene",
+    "prompt": "Look up the canonical symbol for NOT_A_GENE. Return JSON null if it is not in the dataset.",
+    "expected": null
+  }
+]

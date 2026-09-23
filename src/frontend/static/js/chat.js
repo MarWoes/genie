@@ -1,5 +1,6 @@
 function chat() {
     return {
+        view: "chat",
         messages: [],
         input: "",
         loading: false,
