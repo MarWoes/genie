@@ -16,6 +16,5 @@ class ChatConversation(BaseModel):
 
     messages: list[ChatMessage] = Field(
         default_factory=list,
-        max_length=50,
         description="Earlier turns, since no server-side persistence is configured yet.",
     )

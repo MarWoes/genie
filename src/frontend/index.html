@@ -13,7 +13,7 @@
 <div class="app-shell" x-data="chat()">
     <header class="topbar">
         <a class="brand" href="/" aria-label="Génie home">
-            <span class="brand-mark">G</span>
+            <span class="brand-mark" aria-hidden="true">🧞</span>
             <span>Génie</span>
         </a>
         <nav class="mode-switch" aria-label="Workspace">
@@ -31,11 +31,19 @@
         <div id="messages" class="messages" x-ref="list" aria-live="polite">
             <template x-for="(message, index) in messages" :key="index">
                 <div class="chat" :class="message.role === 'user' ? 'chat-end' : 'chat-start'">
+                    <div class="chat-image">
+                        <span class="chat-avatar" role="img"
+                              :aria-label="message.role === 'user' ? 'You' : 'Génie'"
+                              x-text="message.role === 'user' ? '👤' : '🧞'"></span>
+                    </div>
                     <div class="chat-bubble" :class="message.role === 'user' ? 'chat-bubble-primary' : ''"
                          x-text="message.content"></div>
                 </div>
             </template>
             <div class="chat chat-start" x-show="loading">
+                <div class="chat-image">
+                    <span class="chat-avatar" role="img" aria-label="Génie">🧞</span>
+                </div>
                 <div class="chat-bubble"><span class="loading loading-dots loading-sm" role="status"
                                                aria-label="Génie is responding"></span></div>
             </div>
