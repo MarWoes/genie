@@ -37,7 +37,7 @@ class AgentService:
             base_url=self._settings.tensorx_base_url,
             model=self._settings.tensorx_model,
             temperature=0,
-            max_retries=2,
+            max_retries=3,
             timeout=120,
         )
 
