@@ -36,7 +36,7 @@
                               :aria-label="message.role === 'user' ? 'You' : 'Génie'"
                               x-text="message.role === 'user' ? '👤' : '🧞'"></span>
                     </div>
-                    <div class="chat-bubble" :class="message.role === 'user' ? 'chat-bubble-primary' : ''"
+                    <div class="chat-bubble" :class="message.role === 'user' ? 'chat-bubble-primary' : 'assistant-reply'"
                          x-text="message.content"></div>
                 </div>
             </template>

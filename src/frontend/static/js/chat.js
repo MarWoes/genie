@@ -4,12 +4,20 @@ function chat() {
         input: "",
         loading: false,
         error: "",
+
+        scrollToBottom() {
+            this.$nextTick(() => {
+                this.$refs.list.scrollTo({top: this.$refs.list.scrollHeight, behavior: "smooth"});
+            });
+        },
+
         async send() {
 
             this.loading = true;
             this.error = "";
 
             this.messages.push({role: "user", content: this.input});
+            this.scrollToBottom();
 
             try {
 
@@ -33,6 +41,7 @@ function chat() {
             } finally {
 
                 this.loading = false;
+                this.scrollToBottom();
 
             }
         },
