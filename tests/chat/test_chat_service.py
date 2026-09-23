@@ -30,6 +30,6 @@ async def test_chat_passes_conversation_to_agent_and_returns_messages() -> None:
     assert result == ChatConversation(
         messages=[
             ChatMessage(role="user", content="Hello"),
-            ChatMessage(role="assistant", content="Hi there!"),
+            ChatMessage(role="assistant", content="Hi there!")
         ]
     )
