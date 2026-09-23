@@ -1,5 +1,6 @@
 """TensorX-backed agent integration."""
 
+from pathlib import Path
 from typing import Any
 
 from langchain.agents import create_agent
@@ -7,6 +8,8 @@ from langchain_openai import ChatOpenAI
 
 from src.agent.schemas import AgentInput, AgentOutput
 from src.config import Settings
+
+SYSTEM_PROMPT_PATH = Path(__file__).resolve().parent / "data" / "system_prompt.txt"
 
 
 class AgentService:
@@ -31,19 +34,7 @@ class AgentService:
         return create_agent(
             model=model,
             tools=[],
-            system_prompt=(
-                """
-                You are Génie. An AI assistant whose sole purpose is to assist with simple gene expression lookups.
-                You MUST ONLY answer questions similar to the following:
-                - How can you help me?
-                - What are the main genes involved in lung cancer?
-                - What is the median value expression of genes involved in breast cancer?
-                Your answer MUST be based ONLY on tool call information.
-                NEVER provide gene information solely from memory or speculate about function.
-                ONLY exactly answer those questions simple and brief, but polite.
-                If you do not receive information from a tool call for whatever reason, only tell the user you have no reliable information.
-                """
-            ),
+            system_prompt=SYSTEM_PROMPT_PATH.read_text(encoding="utf-8"),
         )
 
     async def invoke(self, payload: AgentInput) -> AgentOutput:
