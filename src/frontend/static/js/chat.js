@@ -4,7 +4,6 @@ function chat() {
         input: "",
         loading: false,
         error: "",
-
         async send() {
 
             this.loading = true;
