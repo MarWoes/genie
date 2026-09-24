@@ -43,17 +43,17 @@ def calculate_metrics(correct_counts: list[int]) -> list[dict[str, float | int]]
 
 
 def matches_expected(actual: Any, case: dict[str, Any]) -> bool:
-    """Check required words for explanations; otherwise compare JSON values."""
+    """Check required words or compare parsed JSON values."""
 
     expected = case["expected"]
+    answer_key = case.get("answer_key")
+    if answer_key and isinstance(actual, dict) and answer_key in actual:
+        actual = actual[answer_key]
+
     if case.get("match") == "contains":
         if not isinstance(actual, str):
             return False
         return all(word.casefold() in actual.casefold() for word in expected)
-
-    answer_key = case.get("answer_key")
-    if answer_key and isinstance(actual, dict) and list(actual) == [answer_key]:
-        actual = actual[answer_key]
 
     if type(actual) is not type(expected):
         return False

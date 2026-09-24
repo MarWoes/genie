@@ -4,44 +4,35 @@ A small proof of concept for natural language gene expression lookups over the
 provided CSV. It runs locally with a hosted, OpenAI-compatible TensorX
 model; it does not need a GPU or a separate tracing/evaluation server.
 
-## Run locally
+## Run with Docker
 
-Use Python 3.12 on macOS or Windows 11. A valid TensorX API key and access to the
-configured TensorX model are needed for chat and evaluations.
-
-macOS:
+Install Docker Engine or Docker Desktop. From the repository root, create the
+environment file `.env` and set your TensorX API key, then build and run:
 
 ```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-cp .env.example .env
-# Edit .env and set TENSORX_API_KEY to your key.
-uvicorn main:app --reload
-```
-
-Windows PowerShell:
-
-```powershell
-py -3.12 -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements-dev.txt
-Copy-Item .env.example .env
-# Edit .env and set TENSORX_API_KEY to your key.
-uvicorn main:app --reload
+docker build -t genie .
+docker run --rm --name genie -p 8000:80 --env-file .env genie
 ```
 
 Open <http://127.0.0.1:8000/> for Chat and Evaluate, or
-<http://127.0.0.1:8000/docs> for the API docs. The static frontend is served
-directly from `src/frontend`; there is no frontend build. The direct Python
-dependencies are pinned in `requirements.txt` and the test tools in
-`requirements-dev.txt`.
+<http://127.0.0.1:8000/docs> for the API docs. Stop the container with Ctrl+C.
+The API key is passed in when the container starts and is excluded from the
+image build context.
 
-Run the tests with:
+## Run with Podman
+
+Install Podman. From the repository root, create the
+environment file `.env` and set your TensorX API key, then build and run:
 
 ```bash
-python -m pytest
+podman build -t genie .
+podman run --rm --name genie -p 8000:80 --env-file .env genie
 ```
+
+Open <http://127.0.0.1:8000/> for Chat and Evaluate, or
+<http://127.0.0.1:8000/docs> for the API docs. Stop the container with Ctrl+C.
+The API key is passed in when the container starts and is excluded from the
+image build context.
 
 ## Architecture and behavior
 
