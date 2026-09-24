@@ -2,7 +2,8 @@
   {
     "name": "How can you help me?",
     "prompt": "How can you help me?",
-    "format": "Return your explanation as a JSON string.",
+    "format": "Return a JSON object with an explanation string field.",
+    "answer_key": "explanation",
     "match": "contains",
     "expected": ["gene", "expression"]
   },
