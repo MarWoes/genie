@@ -75,7 +75,7 @@ class EvaluationService:
     async def run(self) -> dict[str, Any]:
         logger.info(
             "Starting evaluation (model=%s, cases=%d, runs_per_case=%d)",
-            self.settings.tensorx_model,
+            self.settings.llm_model,
             len(self.cases),
             RUNS,
         )
@@ -93,12 +93,12 @@ class EvaluationService:
         metrics = calculate_metrics(correct_counts)
         logger.info(
             "Evaluation complete (model=%s, pass@1=%.3f, pass^3=%.3f)",
-            self.settings.tensorx_model,
+            self.settings.llm_model,
             metrics[0]["pass_at_k"],
             metrics[-1]["pass_hat_k"],
         )
         return {
-            "model": self.settings.tensorx_model,
+            "model": self.settings.llm_model,
             "runs": RUNS,
             "cases": results,
             "metrics": metrics,

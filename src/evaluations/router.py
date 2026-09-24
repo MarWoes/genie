@@ -27,7 +27,7 @@ async def cases(
 async def run(
     service: Annotated[EvaluationService, Depends(get_evaluation_service)],
 ) -> dict[str, Any]:
-    if not service.settings.tensorx_api_key:
-        raise HTTPException(status_code=503, detail="Configure TENSORX_API_KEY first.")
+    if not service.settings.llm_api_key:
+        raise HTTPException(status_code=503, detail="Configure LLM_API_KEY first.")
     # POC: a user-triggered run makes paid model calls; no job queue or persistence.
     return await service.run()

@@ -30,7 +30,7 @@ async def get_chat_service(
     "",
     status_code=status.HTTP_200_OK,
     summary="Chat with Genie",
-    description="Run one chat turn through the TensorX-powered agent.",
+    description="Run one chat turn through the configured OpenAI-compatible model API.",
 )
 async def chat(
         messages: Annotated[list[dict[str, Any]], Body(embed=True)],

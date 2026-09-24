@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime settings for the API and TensorX model client."""
+    """Runtime settings for the OpenAI-compatible model API."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -12,9 +12,9 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    tensorx_api_key: str | None = None
-    tensorx_base_url: str = "https://api.tensorx.ai/v1"
-    tensorx_model: str = "z-ai/glm-5.3-flash"
+    llm_api_key: str | None = None
+    llm_base_url: str = "https://api.tensorx.ai/v1"
+    llm_model: str = "z-ai/glm-5.3-flash"
 
 
 settings = Settings()

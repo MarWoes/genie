@@ -1,4 +1,4 @@
-"""LangChain tool-calling agent backed by TensorX."""
+"""LangChain tool-calling agent backed by an OpenAI-compatible API."""
 
 import logging
 from pathlib import Path
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class AgentService:
-    """Create and invoke the TensorX-powered agent."""
+    """Create and invoke the configured model agent."""
 
     def __init__(
         self,
@@ -27,15 +27,15 @@ class AgentService:
         self._settings = settings
         self._gene_service = gene_service
         self._agent = self._build_agent()
-        logger.info("Initialized agent with model %s", self._settings.tensorx_model)
+        logger.info("Initialized agent with model %s", self._settings.llm_model)
 
     def _build_agent(self) -> Any | None:
         """Build the agent without making a network request."""
 
         model = ChatOpenAI(
-            api_key=self._settings.tensorx_api_key,
-            base_url=self._settings.tensorx_base_url,
-            model=self._settings.tensorx_model,
+            api_key=self._settings.llm_api_key,
+            base_url=self._settings.llm_base_url,
+            model=self._settings.llm_model,
             temperature=0,
             max_retries=3,
             timeout=120,
@@ -91,7 +91,7 @@ class AgentService:
         except Exception as exc:
             logger.error(
                 "Agent invocation failed (model=%s, error_type=%s)",
-                self._settings.tensorx_model,
+                self._settings.llm_model,
                 type(exc).__name__,
             )
             raise
